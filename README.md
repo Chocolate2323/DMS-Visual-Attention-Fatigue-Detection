@@ -13,6 +13,20 @@ pip install -r requirements.txt
 
 项目已包含 `models/face_landmarker.task`。如果换机器后缺失该文件，可以从 MediaPipe 官方模型地址下载，并在 `configs/default.yaml` 的 `runtime.face_landmarker_model` 中指定路径。
 
+## 项目结构
+
+```text
+configs/     阈值和运行配置
+dms/         核心算法与命令行入口
+models/      MediaPipe 模型文件
+scripts/     测试和批处理脚本
+data/        本地数据集目录，内容不提交到 GitHub
+outputs/     运行结果目录，内容不提交到 GitHub
+docs/        设计方案和项目说明
+```
+
+更详细的说明见 `docs/PROJECT_STRUCTURE.md`。
+
 ## 运行
 
 处理视频：
@@ -56,6 +70,42 @@ python scripts/smoke_test.py --face-image path/to/face.jpg --keep-temp
 ```
 
 测试结果会放在 `outputs/smoke_test/`，其中包括输入测试视频、标注视频和 JSON 结果。
+
+## 本地数据集测试
+
+把你自己的视频放到 `data/local/`。推荐按类别建子目录：
+
+```text
+data/local/
+  normal/
+  distracted/
+  fatigue/
+```
+
+批量处理整个本地数据集：
+
+```bash
+python scripts/run_dataset.py --input-dir data/local --output-dir outputs/dataset_runs
+```
+
+只快速检查每个视频前 100 帧：
+
+```bash
+python scripts/run_dataset.py --input-dir data/local --output-dir outputs/quick_check --max-frames 100
+```
+
+如果只想生成 JSON，不生成标注视频：
+
+```bash
+python scripts/run_dataset.py --input-dir data/local --output-dir outputs/json_only --no-video
+```
+
+批处理完成后先看总表：
+
+```text
+outputs/dataset_runs/summary.csv
+outputs/dataset_runs/summary.json
+```
 
 ## 输出
 

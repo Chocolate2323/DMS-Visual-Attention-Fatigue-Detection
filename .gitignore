@@ -2,11 +2,23 @@ __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
 
+# Local outputs are generated artifacts.
 outputs/
-data/
+
+# Keep dataset instructions and empty directory placeholders, but do not commit
+# local videos or dataset contents.
+data/**
+!data/
+!data/README.md
+!data/local/
+!data/local/.gitkeep
+!data/samples/
+!data/samples/.gitkeep
+
 *.mp4
 *.avi
 *.mov
+*.mkv
 
 .env
 .venv/
