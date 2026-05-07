@@ -1,0 +1,48 @@
+runtime:
+  face_landmarker_model: models/face_landmarker.task
+  calibration_seconds: 5.0
+  max_missing_face_seconds: 1.0
+  smoothing_alpha: 0.35
+
+attention:
+  yaw_threshold_deg: 30.0
+  pitch_up_threshold_deg: 22.0
+  pitch_down_threshold_deg: 25.0
+  roll_threshold_deg: 25.0
+  gaze_threshold: 0.42
+  distracted_score_threshold: 0.60
+  severe_distracted_score_threshold: 0.40
+  distracted_hold_seconds: 1.5
+  severe_hold_seconds: 0.8
+  weights:
+    head: 0.60
+    gaze: 0.30
+    missing_face: 0.10
+
+fatigue:
+  ear_closed_ratio: 0.65
+  default_ear_threshold: 0.22
+  min_blink_seconds: 0.06
+  max_blink_seconds: 0.45
+  long_eye_closure_seconds: 0.50
+  immediate_fatigue_eye_closed_seconds: 1.50
+  perclos_window_seconds: 30.0
+  perclos_warn_threshold: 0.15
+  perclos_fatigue_threshold: 0.20
+  fatigue_score_threshold: 0.60
+  fatigue_hold_seconds: 3.0
+  mar_yawn_threshold: 0.60
+  yawn_min_seconds: 1.0
+  yawn_window_seconds: 60.0
+  nod_pitch_threshold_deg: 20.0
+  nod_window_seconds: 60.0
+  weights:
+    perclos: 0.45
+    long_eye_closure: 0.25
+    yawn: 0.15
+    head_nod: 0.15
+
+visualization:
+  draw_landmarks: false
+  draw_head_axis: true
+  overlay_scale: 0.65
