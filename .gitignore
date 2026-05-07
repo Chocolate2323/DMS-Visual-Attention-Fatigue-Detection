@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+outputs/
+data/
+*.mp4
+*.avi
+*.mov
+
+.env
+.venv/
+.DS_Store
