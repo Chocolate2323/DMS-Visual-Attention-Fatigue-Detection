@@ -33,6 +33,30 @@ python -m dms.app --input 0 --mirror --display
 python -m dms.app --input data/driver.mp4 --max-frames 100
 ```
 
+## 最小可行性测试
+
+在跑自己的数据集前，可以先运行 smoke test，确认环境、模型、视频读取、JSON 输出和标注视频流程可用。
+
+只测试基础视频管线：
+
+```bash
+python scripts/smoke_test.py
+```
+
+下载一张公开人脸样例，并验证人脸关键点、头姿、EAR 等特征能输出：
+
+```bash
+python scripts/smoke_test.py --download-face --keep-temp
+```
+
+如果不想联网，也可以使用本地任意正脸图片：
+
+```bash
+python scripts/smoke_test.py --face-image path/to/face.jpg --keep-temp
+```
+
+测试结果会放在 `outputs/smoke_test/`，其中包括输入测试视频、标注视频和 JSON 结果。
+
 ## 输出
 
 `outputs/results.json` 是 JSON 数组，每个元素包含：
