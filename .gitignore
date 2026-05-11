@@ -2,11 +2,13 @@ __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
 
-# Local outputs are generated artifacts.
+# outputs 是程序生成的结果目录，不提交到 Git。
 outputs/
 
-# Keep dataset instructions and empty directory placeholders, but do not commit
-# local videos or dataset contents.
+# demo 是演示结果目录
+demo/
+
+# data 目录保留说明文件和空目录占位符，本地数据集视频不提交到 Git。
 data/**
 !data/
 !data/README.md

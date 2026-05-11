@@ -1,4 +1,4 @@
-"""Driver monitoring system MVP package."""
+"""驾驶员监控系统（DMS）最小可行实现包。"""
 
 __all__ = ["__version__"]
 

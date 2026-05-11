@@ -1,4 +1,4 @@
-# Project Structure
+# 项目结构
 
 ```text
 DMS-Visual-Attention-Fatigue-Detection/
@@ -28,22 +28,23 @@ DMS-Visual-Attention-Fatigue-Detection/
   docs/
     DMS_视觉注意力分析与疲劳检测方案.md
     PROJECT_STRUCTURE.md
+    PROJECT_REVIEW.md
 ```
 
-## Directory Roles
+## 目录作用
 
-- `dms/`: main Python package and algorithm implementation.
-- `configs/`: threshold and runtime configuration.
-- `models/`: lightweight model files required at runtime.
-- `scripts/`: utility scripts for smoke tests and dataset batch processing.
-- `data/local/`: your local dataset videos. Ignored by Git.
-- `data/samples/`: small local samples. Ignored by Git except the placeholder.
-- `outputs/`: generated annotated videos, JSON results, and summaries. Ignored by Git.
-- `docs/`: design notes and project documentation.
+- `dms/`：核心 Python 包和算法实现。
+- `configs/`：阈值与运行配置。
+- `models/`：运行时需要的轻量模型文件。
+- `scripts/`：最小测试和数据集批处理脚本。
+- `data/local/`：本地数据集视频目录，内容被 Git 忽略。
+- `data/samples/`：少量本地样例目录，内容被 Git 忽略，只保留占位符。
+- `outputs/`：标注视频、JSON 结果和汇总文件，内容被 Git 忽略。
+- `docs/`：设计方案、审查记录和项目说明。
 
-## Local Dataset Workflow
+## 本地数据集流程
 
-1. Put videos under `data/local/`.
-2. Run `python scripts/smoke_test.py --download-face --keep-temp` once to check the environment.
-3. Run `python scripts/run_dataset.py --input-dir data/local --output-dir outputs/dataset_runs`.
-4. Inspect `outputs/dataset_runs/summary.csv` first, then open individual JSON or annotated videos.
+1. 将视频放到 `data/local/`。
+2. 先运行 `python scripts/smoke_test.py --download-face --keep-temp` 检查环境。
+3. 再运行 `python scripts/run_dataset.py --input-dir data/local --output-dir outputs/dataset_runs`。
+4. 优先查看 `outputs/dataset_runs/summary.csv`，再打开单个 JSON 或标注视频检查细节。

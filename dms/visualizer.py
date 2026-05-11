@@ -8,6 +8,8 @@ from .types import DMSResult, FrameFeatures
 
 
 class Visualizer:
+    """在输出视频上绘制关键点、头部坐标轴和状态面板。"""
+
     def __init__(self, config: dict) -> None:
         self.config = config
         self.draw_landmarks = config["visualization"]["draw_landmarks"]
@@ -24,6 +26,7 @@ class Visualizer:
         return canvas
 
     def _draw_landmarks(self, frame: np.ndarray, features: FrameFeatures) -> None:
+        """绘制少量用于调试的眼部、嘴部和头姿关键点。"""
         landmarks = features.extra.get("landmarks")
         image_size = features.extra.get("image_size")
         if landmarks is None or image_size is None:
@@ -40,6 +43,7 @@ class Visualizer:
             cv2.circle(frame, (x, y), 1, (0, 255, 255), -1)
 
     def _draw_head_axis(self, frame: np.ndarray, features: FrameFeatures) -> None:
+        """绘制从鼻尖出发的 3D 坐标轴，辅助观察头姿估计效果。"""
         pose = features.head_pose
         landmarks = features.extra.get("landmarks")
         image_size = features.extra.get("image_size")
@@ -71,6 +75,7 @@ class Visualizer:
         cv2.line(frame, origin, tuple(projected[2]), (255, 0, 0), 2)
 
     def _draw_overlay(self, frame: np.ndarray, result: DMSResult) -> None:
+        # cv2.putText 默认字体不支持中文，所以视频上的标签保持英文。
         color_attention = (40, 210, 40) if result.driving_state == "normal" else (0, 165, 255)
         color_fatigue = (40, 210, 40) if result.fatigue_state == "normal" else (0, 0, 255)
         lines = [

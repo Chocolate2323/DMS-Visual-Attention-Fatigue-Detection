@@ -6,6 +6,8 @@ from typing import Any
 
 
 class JsonArrayWriter:
+    """逐帧写入 JSON 数组，避免把所有结果先攒在内存里。"""
+
     def __init__(self, path: str | Path | None) -> None:
         self.path = Path(path) if path else None
         self._file = None

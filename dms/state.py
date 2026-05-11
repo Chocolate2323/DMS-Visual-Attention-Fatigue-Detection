@@ -11,6 +11,8 @@ from .types import DMSResult, FrameFeatures
 
 
 class DMSState:
+    """管理跨帧状态：基线校准、平滑、注意力判断和疲劳判断。"""
+
     def __init__(self, config: dict) -> None:
         self.config = config
         self.attention = AttentionState(config["attention"])
@@ -72,6 +74,7 @@ class DMSState:
         gaze_delta_y = self._delta("gaze_y")
 
         if not self._calibration_ready and features.face_found:
+            # 校准期默认驾驶员在正常看前方，不用原始绝对角度触发分神。
             yaw_delta = 0.0
             pitch_delta = 0.0
             roll_delta = 0.0
@@ -139,6 +142,7 @@ class DMSState:
         return dict(self._baseline)
 
     def _update_smoothed_features(self, features: FrameFeatures) -> None:
+        """对连续特征做指数平滑，降低关键点检测噪声。"""
         for name in self._smoothed:
             current = getattr(features, name)
             self._smoothed[name] = smooth_value(
@@ -148,6 +152,7 @@ class DMSState:
             )
 
     def _maybe_collect_calibration(self, features: FrameFeatures) -> None:
+        """收集开头几秒的正常驾驶样本，作为个人基线。"""
         if self._calibration_ready:
             return
 
@@ -168,6 +173,7 @@ class DMSState:
         self._calibration_ready = True
 
     def _delta(self, name: str) -> float | None:
+        """返回当前平滑值相对个人基线的偏移。"""
         value = self._smoothed.get(name)
         if value is None or not np.isfinite(value):
             return None

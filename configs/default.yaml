@@ -1,10 +1,15 @@
 runtime:
+  # MediaPipe 人脸关键点模型路径。
   face_landmarker_model: models/face_landmarker.task
+  # 视频开头用于采集“正常看前方”基线的时长。
   calibration_seconds: 5.0
+  # 连续多久检测不到人脸后，将其视为注意力异常。
   max_missing_face_seconds: 1.0
+  # 指数平滑系数，越大越灵敏，越小越稳定。
   smoothing_alpha: 0.35
 
 attention:
+  # 头姿和视线偏离阈值。实际数据集上建议先用 summary.csv 再调。
   yaw_threshold_deg: 30.0
   pitch_up_threshold_deg: 22.0
   pitch_down_threshold_deg: 25.0
@@ -20,7 +25,9 @@ attention:
     missing_face: 0.10
 
 fatigue:
+  # EAR 基线乘以该比例作为个人闭眼阈值。
   ear_closed_ratio: 0.65
+  # 无法获得个人基线时使用的默认闭眼阈值。
   default_ear_threshold: 0.22
   min_blink_seconds: 0.06
   max_blink_seconds: 0.45
@@ -43,6 +50,7 @@ fatigue:
     head_nod: 0.15
 
 visualization:
+  # OpenCV 默认文字绘制不支持中文，因此视频叠字仍保持英文。
   draw_landmarks: false
   draw_head_axis: true
   overlay_scale: 0.65

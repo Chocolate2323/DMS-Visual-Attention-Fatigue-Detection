@@ -10,18 +10,22 @@ from .types import FaceObservation
 
 
 def eye_aspect_ratio(points: np.ndarray) -> float:
+    """计算 EAR。数值越小，眼睛越接近闭合。"""
     return (euclidean(points[1], points[5]) + euclidean(points[2], points[4])) / (
         2.0 * max(euclidean(points[0], points[3]), 1e-6)
     )
 
 
 def mouth_aspect_ratio(points: np.ndarray) -> float:
+    """计算 MAR。数值越大，嘴巴张开程度越高。"""
     width = max(euclidean(points[0], points[1]), 1e-6)
     height = euclidean(points[2], points[3])
     return height / width
 
 
 class FatigueFeatureExtractor:
+    """从关键点中提取疲劳检测需要的 EAR 和 MAR。"""
+
     def extract(self, observation: FaceObservation) -> tuple[float | None, float | None]:
         if not observation.found or observation.landmarks is None:
             return None, None
@@ -44,6 +48,8 @@ class FatigueFeatureExtractor:
 
 
 class FatigueState:
+    """维护疲劳检测的时间窗口和状态机。"""
+
     def __init__(self, config: dict) -> None:
         self.config = config
         self.closed_frames: deque[tuple[float, bool]] = deque()
@@ -72,6 +78,7 @@ class FatigueState:
         cfg = self.config
         eye_threshold = cfg["default_ear_threshold"]
         if ear_baseline is not None and np.isfinite(ear_baseline):
+            # 用个人睁眼基线动态生成闭眼阈值，比固定阈值更适合不同眼型。
             eye_threshold = clip(float(ear_baseline) * cfg["ear_closed_ratio"], 0.14, 0.32)
 
         is_closed = bool(ear is not None and ear < eye_threshold)
@@ -96,6 +103,7 @@ class FatigueState:
         closed_count = sum(1 for _, closed in self.closed_frames if closed)
         perclos = closed_count / valid_frames if valid_frames else 0.0
 
+        # blink_rate 按最近一分钟折算；视频刚开始时用实际运行时长避免偏低。
         elapsed = max(now_seconds - (self._start_seconds or now_seconds), 1.0)
         blink_window = min(60.0, elapsed)
         blink_rate = len(self.blinks) * 60.0 / blink_window
@@ -143,6 +151,7 @@ class FatigueState:
         }
 
     def _update_eye_state(self, now_seconds: float, is_closed: bool) -> None:
+        """根据 OPEN -> CLOSED -> OPEN 的状态变化识别眨眼和长闭眼。"""
         self.closed_frames.append((now_seconds, is_closed))
         if is_closed and self._closed_started_at is None:
             self._closed_started_at = now_seconds
@@ -157,6 +166,7 @@ class FatigueState:
             self._closed_started_at = None
 
     def _update_yawn_state(self, now_seconds: float, is_yawning: bool) -> None:
+        """嘴巴持续张开超过阈值时记为一次打哈欠。"""
         if is_yawning and self._yawn_started_at is None:
             self._yawn_started_at = now_seconds
             return
@@ -168,6 +178,7 @@ class FatigueState:
             self._yawn_started_at = None
 
     def _update_nod_state(self, now_seconds: float, is_nodding: bool) -> None:
+        """用 pitch 相对基线的快速下探近似识别点头。"""
         if is_nodding and self._nod_started_at is None:
             self._nod_started_at = now_seconds
             return

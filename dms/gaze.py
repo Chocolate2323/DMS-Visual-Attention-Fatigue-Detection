@@ -8,7 +8,7 @@ from .types import FaceObservation
 
 
 class GazeEstimator:
-    """Estimate a coarse gaze vector from iris position inside both eyes."""
+    """根据虹膜在眼眶内的相对位置估计粗略视线方向。"""
 
     def estimate(self, observation: FaceObservation) -> tuple[float | None, float | None]:
         if not observation.found or observation.landmarks is None:
@@ -16,6 +16,7 @@ class GazeEstimator:
 
         width, height = observation.image_size
         landmarks = observation.landmarks
+        # 单眼视线容易受遮挡和眨眼影响，因此左右眼分别估计后再取均值。
         gaze_values = []
 
         left = self._single_eye_gaze(
@@ -61,6 +62,7 @@ class GazeEstimator:
         if max(iris_indices) >= len(landmarks):
             return None, None
 
+        # gaze_x/gaze_y 是归一化偏移量，不是物理角度。
         corners = lm.pixel_points(landmarks, eye_corners, width, height)
         iris = lm.mean_pixel_point(landmarks, iris_indices, width, height)
         upper = lm.mean_pixel_point(landmarks, upper_indices, width, height)

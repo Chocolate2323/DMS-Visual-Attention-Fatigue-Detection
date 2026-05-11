@@ -14,53 +14,54 @@ DEFAULT_EXTENSIONS = (".mp4", ".avi", ".mov", ".mkv")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Batch-run DMS on a local video dataset.")
+    parser = argparse.ArgumentParser(description="批量处理本地视频数据集。")
     parser.add_argument(
         "--input-dir",
         default="data/local",
-        help="Directory containing local dataset videos.",
+        help="本地数据集视频目录。",
     )
     parser.add_argument(
         "--output-dir",
         default="outputs/dataset_runs",
-        help="Directory where annotated videos, JSON results, and summary files are written.",
+        help="标注视频、JSON 结果和汇总文件的输出目录。",
     )
     parser.add_argument(
         "--config",
         default=None,
-        help="Optional YAML config path passed to dms.app.",
+        help="可选 YAML 配置路径，会传给 dms.app。",
     )
     parser.add_argument(
         "--extensions",
         nargs="+",
         default=list(DEFAULT_EXTENSIONS),
-        help="Video extensions to process.",
+        help="需要处理的视频扩展名。",
     )
     parser.add_argument(
         "--max-frames",
         type=int,
         default=None,
-        help="Optional frame limit per video for quick checks.",
+        help="每个视频最多处理的帧数，适合快速检查。",
     )
     parser.add_argument(
         "--no-video",
         action="store_true",
-        help="Do not write annotated videos; only write JSON and summary.",
+        help="不生成标注视频，只生成 JSON 和汇总文件。",
     )
     parser.add_argument(
         "--skip-existing",
         action="store_true",
-        help="Skip videos whose JSON result already exists.",
+        help="如果某个视频的 JSON 结果已经存在，则跳过。",
     )
     parser.add_argument(
         "--stop-on-error",
         action="store_true",
-        help="Stop immediately if any video fails.",
+        help="任意视频失败时立即停止。",
     )
     return parser.parse_args()
 
 
 def discover_videos(input_dir: Path, extensions: list[str]) -> list[Path]:
+    """递归查找指定扩展名的视频文件。"""
     normalized = {ext.lower() if ext.startswith(".") else f".{ext.lower()}" for ext in extensions}
     return sorted(
         path
@@ -70,6 +71,7 @@ def discover_videos(input_dir: Path, extensions: list[str]) -> list[Path]:
 
 
 def output_paths(input_dir: Path, output_dir: Path, video_path: Path) -> tuple[Path, Path]:
+    """保持输入目录层级，为每个视频生成独立输出目录。"""
     relative = video_path.relative_to(input_dir)
     video_output_dir = output_dir / relative.parent / relative.stem
     annotated_path = video_output_dir / f"{relative.stem}_annotated.mp4"
@@ -85,6 +87,7 @@ def run_single_video(
     max_frames: int | None,
     write_video: bool,
 ) -> None:
+    """调用 dms.app 处理单个视频。"""
     annotated_path.parent.mkdir(parents=True, exist_ok=True)
 
     command = [
@@ -109,6 +112,7 @@ def run_single_video(
 
 
 def load_records(json_path: Path) -> list[dict[str, Any]]:
+    """读取单个视频的逐帧 JSON 结果。"""
     with json_path.open("r", encoding="utf-8") as f:
         records = json.load(f)
     if not isinstance(records, list):
@@ -117,6 +121,7 @@ def load_records(json_path: Path) -> list[dict[str, Any]]:
 
 
 def summarize_records(input_dir: Path, video_path: Path, json_path: Path, status: str, error: str = "") -> dict[str, Any]:
+    """把逐帧结果压缩成一行汇总，便于批量查看。"""
     row: dict[str, Any] = {
         "video": str(video_path.relative_to(input_dir)),
         "status": status,
@@ -159,6 +164,7 @@ def summarize_records(input_dir: Path, video_path: Path, json_path: Path, status
 
 
 def write_summary(output_dir: Path, rows: list[dict[str, Any]]) -> None:
+    """同时写出 CSV 和 JSON 两种汇总格式。"""
     output_dir.mkdir(parents=True, exist_ok=True)
     csv_path = output_dir / "summary.csv"
     json_path = output_dir / "summary.json"
@@ -191,15 +197,15 @@ def main() -> int:
     output_dir = Path(args.output_dir)
 
     if not input_dir.exists():
-        print(f"Input directory does not exist: {input_dir}", file=sys.stderr)
+        print(f"输入目录不存在：{input_dir}", file=sys.stderr)
         return 2
 
     videos = discover_videos(input_dir, args.extensions)
     if not videos:
-        print(f"No videos found under {input_dir}. Extensions: {', '.join(args.extensions)}")
+        print(f"在 {input_dir} 下没有找到视频。扩展名：{', '.join(args.extensions)}")
         return 0
 
-    print(f"Found {len(videos)} video(s).")
+    print(f"找到 {len(videos)} 个视频。")
     rows: list[dict[str, Any]] = []
 
     for index, video_path in enumerate(videos, start=1):
@@ -208,7 +214,7 @@ def main() -> int:
 
         if args.skip_existing and json_path.exists():
             rows.append(summarize_records(input_dir, video_path, json_path, status="ok"))
-            print("  skipped existing result")
+            print("  已跳过已有结果")
             continue
 
         try:
@@ -221,17 +227,17 @@ def main() -> int:
                 write_video=not args.no_video,
             )
             rows.append(summarize_records(input_dir, video_path, json_path, status="ok"))
-            print(f"  ok -> {json_path}")
+            print(f"  成功 -> {json_path}")
         except Exception as exc:
             message = str(exc)
             rows.append(summarize_records(input_dir, video_path, json_path, status="failed", error=message))
-            print(f"  failed: {message}", file=sys.stderr)
+            print(f"  失败：{message}", file=sys.stderr)
             if args.stop_on_error:
                 write_summary(output_dir, rows)
                 return 1
 
     write_summary(output_dir, rows)
-    print(f"Summary: {output_dir / 'summary.csv'}")
+    print(f"汇总文件：{output_dir / 'summary.csv'}")
     return 0
 
 

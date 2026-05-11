@@ -4,6 +4,8 @@ from .math_utils import clip
 
 
 class AttentionState:
+    """把头姿、视线和人脸缺失融合成驾驶注意力状态。"""
+
     def __init__(self, config: dict) -> None:
         self.config = config
         self._distracted_started_at: float | None = None
@@ -23,9 +25,11 @@ class AttentionState:
         cfg = self.config
 
         if not face_found:
+            # 检测不到人脸时，无法确认驾驶员是否看路，按高风险处理。
             head_deviation = 1.0
             gaze_deviation = 1.0
         else:
+            # 将不同量纲的角度/视线偏移归一化到 0-1，再进行加权融合。
             yaw_norm = abs(yaw_delta or 0.0) / cfg["yaw_threshold_deg"]
             pitch = pitch_delta or 0.0
             pitch_threshold = cfg["pitch_down_threshold_deg"] if pitch < 0 else cfg["pitch_up_threshold_deg"]
@@ -59,6 +63,7 @@ class AttentionState:
         }
 
     def _debounced_state(self, now_seconds: float, candidate: bool, severe_candidate: bool) -> str:
+        """持续超过阈值才切换状态，避免单帧抖动造成误报。"""
         cfg = self.config
 
         if severe_candidate:

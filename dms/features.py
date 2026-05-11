@@ -10,6 +10,8 @@ from .types import FrameFeatures
 
 
 class FeatureExtractor:
+    """串联人脸检测、头姿、视线和疲劳特征提取。"""
+
     def __init__(self, config: dict) -> None:
         self.face_tracker = MediaPipeFaceTracker(config["runtime"]["face_landmarker_model"])
         self.head_pose = HeadPoseEstimator()
@@ -21,6 +23,7 @@ class FeatureExtractor:
         if not observation.found:
             return FrameFeatures(timestamp_ms=timestamp_ms, face_found=False)
 
+        # 后续状态判断只依赖 FrameFeatures，不再直接访问原始图像。
         head_pose = self.head_pose.estimate(observation)
         gaze_x, gaze_y = self.gaze.estimate(observation)
         ear, mar = self.fatigue.extract(observation)

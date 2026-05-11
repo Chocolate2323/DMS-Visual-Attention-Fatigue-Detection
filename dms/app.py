@@ -15,56 +15,58 @@ from .visualizer import Visualizer
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="DMS visual attention and fatigue detection from driver video.",
+        description="从驾驶员视频中检测视觉注意力和疲劳状态。",
     )
     parser.add_argument(
         "--input",
         "-i",
         required=True,
-        help="Input video path or camera index, for example 0.",
+        help="输入视频路径或摄像头编号，例如 0。",
     )
     parser.add_argument(
         "--output",
         "-o",
         default="outputs/annotated.mp4",
-        help="Annotated output video path. Use 'none' to disable video writing.",
+        help="标注视频输出路径。传入 none 可关闭视频输出。",
     )
     parser.add_argument(
         "--json",
         default="outputs/results.json",
-        help="JSON result path. Use 'none' to disable JSON writing.",
+        help="JSON 结果输出路径。传入 none 可关闭 JSON 输出。",
     )
     parser.add_argument(
         "--config",
         default=None,
-        help="Optional YAML config path. Values override configs/default.yaml.",
+        help="可选 YAML 配置路径，会覆盖 configs/default.yaml 中的同名字段。",
     )
     parser.add_argument(
         "--display",
         action="store_true",
-        help="Show annotated frames in a local OpenCV window.",
+        help="在本地 OpenCV 窗口中实时显示标注画面。",
     )
     parser.add_argument(
         "--mirror",
         action="store_true",
-        help="Mirror frames horizontally, useful for webcam preview.",
+        help="水平镜像画面，适合摄像头预览。",
     )
     parser.add_argument(
         "--max-frames",
         type=int,
         default=None,
-        help="Stop after N frames, useful for quick tests.",
+        help="最多处理 N 帧，适合快速测试。",
     )
     return parser.parse_args(argv)
 
 
 def open_capture(source: str) -> cv2.VideoCapture:
+    """打开视频文件或摄像头。纯数字字符串会被视为摄像头编号。"""
     if source.isdigit():
         return cv2.VideoCapture(int(source))
     return cv2.VideoCapture(source)
 
 
 def make_video_writer(path: str | None, fps: float, width: int, height: int) -> cv2.VideoWriter | None:
+    """按输出后缀创建 OpenCV 视频写入器。"""
     if not path or path.lower() == "none":
         return None
 
@@ -82,7 +84,7 @@ def run(args: argparse.Namespace) -> int:
     config = load_config(args.config)
     cap = open_capture(args.input)
     if not cap.isOpened():
-        print(f"Cannot open input: {args.input}", file=sys.stderr)
+        print(f"无法打开输入：{args.input}", file=sys.stderr)
         return 2
 
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -109,6 +111,7 @@ def run(args: argparse.Namespace) -> int:
 
             timestamp_ms = cap.get(cv2.CAP_PROP_POS_MSEC)
             if timestamp_ms <= 0:
+                # 有些摄像头或编码器不给时间戳，用帧号和 FPS 估算。
                 timestamp_ms = frame_index * 1000.0 / fps
 
             features = extractor.extract(frame, timestamp_ms)
@@ -134,11 +137,11 @@ def run(args: argparse.Namespace) -> int:
     if args.display:
         cv2.destroyAllWindows()
 
-    print(f"Processed {frame_index} frames.")
+    print(f"已处理 {frame_index} 帧。")
     if args.output.lower() != "none":
-        print(f"Annotated video: {args.output}")
+        print(f"标注视频：{args.output}")
     if args.json.lower() != "none":
-        print(f"JSON results: {args.json}")
+        print(f"JSON 结果：{args.json}")
     return 0
 
 

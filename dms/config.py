@@ -11,6 +11,7 @@ DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[1] / "configs" / "default
 
 
 def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    """递归合并配置，让自定义配置只覆盖写到的字段。"""
     merged = deepcopy(base)
     for key, value in override.items():
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
@@ -21,6 +22,7 @@ def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]
 
 
 def load_config(path: str | Path | None = None) -> dict[str, Any]:
+    """读取默认配置，并可叠加一个用户指定的 YAML 配置。"""
     with DEFAULT_CONFIG_PATH.open("r", encoding="utf-8") as f:
         config = yaml.safe_load(f) or {}
 

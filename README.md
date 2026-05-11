@@ -1,6 +1,6 @@
 # DMS 视觉注意力分析与疲劳检测
 
-本目录实现了一个基于视频的 DMS MVP：输入驾驶员视频，输出驾驶员状态 `normal / distracted` 和疲劳状态 `normal / fatigue`，并生成标注视频和 JSON 结果。
+本目录实现了一个基于视频的 DMS 最小可行版本：输入驾驶员视频，输出驾驶员状态 `normal / distracted` 和疲劳状态 `normal / fatigue`，并生成标注视频和 JSON 结果。
 
 ## 环境
 
@@ -49,7 +49,7 @@ python -m dms.app --input data/driver.mp4 --max-frames 100
 
 ## 最小可行性测试
 
-在跑自己的数据集前，可以先运行 smoke test，确认环境、模型、视频读取、JSON 输出和标注视频流程可用。
+在跑自己的数据集前，可以先运行最小测试，确认环境、模型、视频读取、JSON 输出和标注视频流程可用。
 
 只测试基础视频管线：
 
@@ -119,7 +119,7 @@ outputs/dataset_runs/summary.json
 
 ## 实现思路
 
-- `dms/face_tracker.py`：MediaPipe Face Mesh 人脸关键点检测
+- `dms/face_tracker.py`：MediaPipe 人脸关键点检测
 - `dms/head_pose.py`：OpenCV `solvePnP` 估计 `yaw / pitch / roll`
 - `dms/gaze.py`：根据虹膜在眼部区域的位置估计粗略视线方向
 - `dms/fatigue.py`：EAR、眨眼、长闭眼、PERCLOS、打哈欠、点头检测
