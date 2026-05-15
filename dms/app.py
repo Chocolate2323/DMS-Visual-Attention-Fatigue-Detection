@@ -55,6 +55,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="最多处理 N 帧，适合快速测试。",
     )
+    parser.add_argument(
+        "--frame-stride",
+        type=int,
+        default=1,
+        help="每隔 N 帧处理一帧。默认 1 表示不抽帧，数据集快速评估可设为 5 或 10。",
+    )
     return parser.parse_args(argv)
 
 
@@ -93,12 +99,15 @@ def run(args: argparse.Namespace) -> int:
 
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    writer = make_video_writer(args.output, fps, width, height)
+    frame_stride = max(1, int(args.frame_stride))
+    writer_fps = fps / frame_stride if frame_stride > 1 else fps
+    writer = make_video_writer(args.output, writer_fps, width, height)
     json_path = None if args.json.lower() == "none" else args.json
 
     dms_state = DMSState(config)
     visualizer = Visualizer(config)
     frame_index = 0
+    processed_frame_count = 0
 
     with FeatureExtractor(config) as extractor, JsonArrayWriter(json_path) as json_writer:
         while True:
@@ -106,17 +115,23 @@ def run(args: argparse.Namespace) -> int:
             if not ok:
                 break
 
+            should_process = frame_index % frame_stride == 0
+            frame_index += 1
+            if not should_process:
+                continue
+
             if args.mirror:
                 frame = cv2.flip(frame, 1)
 
             timestamp_ms = cap.get(cv2.CAP_PROP_POS_MSEC)
             if timestamp_ms <= 0:
                 # 有些摄像头或编码器不给时间戳，用帧号和 FPS 估算。
-                timestamp_ms = frame_index * 1000.0 / fps
+                timestamp_ms = (frame_index - 1) * 1000.0 / fps
 
             features = extractor.extract(frame, timestamp_ms)
             result = dms_state.update(features)
             json_writer.write(result.to_dict())
+            processed_frame_count += 1
 
             annotated = visualizer.draw(frame, features, result)
             if writer is not None:
@@ -127,8 +142,7 @@ def run(args: argparse.Namespace) -> int:
                 if cv2.waitKey(1) & 0xFF in (27, ord("q")):
                     break
 
-            frame_index += 1
-            if args.max_frames is not None and frame_index >= args.max_frames:
+            if args.max_frames is not None and processed_frame_count >= args.max_frames:
                 break
 
     cap.release()
@@ -137,7 +151,7 @@ def run(args: argparse.Namespace) -> int:
     if args.display:
         cv2.destroyAllWindows()
 
-    print(f"已处理 {frame_index} 帧。")
+    print(f"已读取 {frame_index} 帧，实际处理 {processed_frame_count} 帧。")
     if args.output.lower() != "none":
         print(f"标注视频：{args.output}")
     if args.json.lower() != "none":

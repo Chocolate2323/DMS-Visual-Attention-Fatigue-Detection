@@ -107,6 +107,20 @@ outputs/dataset_runs/summary.csv
 outputs/dataset_runs/summary.json
 ```
 
+## YawDD 数据集评估
+
+如果本地已经解压 YawDD 到 `data/local/archive`，可以直接评估 Mirror 子集的打哈欠检测效果：
+
+```bash
+python scripts/evaluate_yawdd.py --input-dir data/local/archive/Mirror --output-dir outputs/yawdd_mirror_eval --frame-stride 10
+```
+
+评估报告见 `docs/YAWDD_EVALUATION.md`。如果想使用本次评估得到的建议阈值，可以传入：
+
+```bash
+python scripts/evaluate_yawdd.py --input-dir data/local/archive/Mirror --output-dir outputs/yawdd_mirror_eval_config036 --config configs/yawdd_eval.yaml --frame-stride 10
+```
+
 ## 输出
 
 `outputs/results.json` 是 JSON 数组，每个元素包含：

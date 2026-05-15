@@ -43,6 +43,12 @@ def parse_args() -> argparse.Namespace:
         help="每个视频最多处理的帧数，适合快速检查。",
     )
     parser.add_argument(
+        "--frame-stride",
+        type=int,
+        default=1,
+        help="每隔 N 帧处理一帧。默认 1 表示不抽帧，数据集快速评估可设为 5 或 10。",
+    )
+    parser.add_argument(
         "--no-video",
         action="store_true",
         help="不生成标注视频，只生成 JSON 和汇总文件。",
@@ -85,6 +91,7 @@ def run_single_video(
     json_path: Path,
     config: str | None,
     max_frames: int | None,
+    frame_stride: int,
     write_video: bool,
 ) -> None:
     """调用 dms.app 处理单个视频。"""
@@ -105,6 +112,8 @@ def run_single_video(
         command.extend(["--config", config])
     if max_frames is not None:
         command.extend(["--max-frames", str(max_frames)])
+    if frame_stride > 1:
+        command.extend(["--frame-stride", str(frame_stride)])
 
     completed = subprocess.run(command, text=True, capture_output=True, check=False)
     if completed.returncode != 0:
@@ -132,6 +141,9 @@ def summarize_records(input_dir: Path, video_path: Path, json_path: Path, status
         "fatigue_frames": 0,
         "min_attention_score": "",
         "max_fatigue_score": "",
+        "max_mar": "",
+        "max_yawn_count": "",
+        "yawn_detected": "",
         "json": str(json_path),
         "error": error,
     }
@@ -148,6 +160,16 @@ def summarize_records(input_dir: Path, video_path: Path, json_path: Path, status
     fatigue_counts = Counter(record.get("fatigue_state") for record in records)
     attention_scores = [float(record.get("attention_score", 0.0)) for record in records]
     fatigue_scores = [float(record.get("fatigue_score", 0.0)) for record in records]
+    mar_values = [
+        float(record.get("features", {}).get("mar"))
+        for record in records
+        if record.get("features", {}).get("mar") is not None
+    ]
+    yawn_counts = [
+        int(record.get("features", {}).get("yawn_count") or 0)
+        for record in records
+    ]
+    max_yawn_count = max(yawn_counts) if yawn_counts else 0
 
     row.update(
         {
@@ -158,6 +180,9 @@ def summarize_records(input_dir: Path, video_path: Path, json_path: Path, status
             "fatigue_frames": fatigue_counts.get("fatigue", 0),
             "min_attention_score": round(min(attention_scores), 4),
             "max_fatigue_score": round(max(fatigue_scores), 4),
+            "max_mar": round(max(mar_values), 4) if mar_values else "",
+            "max_yawn_count": max_yawn_count,
+            "yawn_detected": int(max_yawn_count > 0),
         }
     )
     return row
@@ -179,6 +204,9 @@ def write_summary(output_dir: Path, rows: list[dict[str, Any]]) -> None:
         "fatigue_frames",
         "min_attention_score",
         "max_fatigue_score",
+        "max_mar",
+        "max_yawn_count",
+        "yawn_detected",
         "json",
         "error",
     ]
@@ -224,6 +252,7 @@ def main() -> int:
                 json_path=json_path,
                 config=args.config,
                 max_frames=args.max_frames,
+                frame_stride=max(1, args.frame_stride),
                 write_video=not args.no_video,
             )
             rows.append(summarize_records(input_dir, video_path, json_path, status="ok"))
