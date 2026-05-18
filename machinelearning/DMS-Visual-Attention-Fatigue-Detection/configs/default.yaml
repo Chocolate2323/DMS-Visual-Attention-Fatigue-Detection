@@ -1,0 +1,56 @@
+runtime:
+  # MediaPipe 人脸关键点模型路径。
+  face_landmarker_model: models/face_landmarker.task
+  # 视频开头用于采集“正常看前方”基线的时长。
+  calibration_seconds: 5.0
+  # 连续多久检测不到人脸后，将其视为注意力异常。
+  max_missing_face_seconds: 1.0
+  # 指数平滑系数，越大越灵敏，越小越稳定。
+  smoothing_alpha: 0.35
+
+attention:
+  # 头姿和视线偏离阈值。实际数据集上建议先用 summary.csv 再调。
+  yaw_threshold_deg: 30.0
+  pitch_up_threshold_deg: 22.0
+  pitch_down_threshold_deg: 25.0
+  roll_threshold_deg: 25.0
+  gaze_threshold: 0.42
+  distracted_score_threshold: 0.60
+  severe_distracted_score_threshold: 0.40
+  distracted_hold_seconds: 1.5
+  severe_hold_seconds: 0.8
+  weights:
+    head: 0.60
+    gaze: 0.30
+    missing_face: 0.10
+
+fatigue:
+  # EAR 基线乘以该比例作为个人闭眼阈值。
+  ear_closed_ratio: 0.65
+  # 无法获得个人基线时使用的默认闭眼阈值。
+  default_ear_threshold: 0.22
+  min_blink_seconds: 0.06
+  max_blink_seconds: 0.45
+  long_eye_closure_seconds: 0.50
+  immediate_fatigue_eye_closed_seconds: 1.50
+  perclos_window_seconds: 30.0
+  perclos_warn_threshold: 0.15
+  perclos_fatigue_threshold: 0.20
+  fatigue_score_threshold: 0.60
+  fatigue_hold_seconds: 3.0
+  mar_yawn_threshold: 0.60
+  yawn_min_seconds: 1.0
+  yawn_window_seconds: 60.0
+  nod_pitch_threshold_deg: 20.0
+  nod_window_seconds: 60.0
+  weights:
+    perclos: 0.45
+    long_eye_closure: 0.25
+    yawn: 0.15
+    head_nod: 0.15
+
+visualization:
+  # OpenCV 默认文字绘制不支持中文，因此视频叠字仍保持英文。
+  draw_landmarks: false
+  draw_head_axis: true
+  overlay_scale: 0.65

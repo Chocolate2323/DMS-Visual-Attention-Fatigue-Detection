@@ -1,0 +1,11 @@
+numpy>=1.26,<2.1
+opencv-python>=4.10,<5
+opencv-contrib-python>=4.10,<5
+mediapipe==0.10.14
+ultralytics>=8.3,<9
+PyYAML>=6.0,<7
+tqdm>=4.66,<5
+protobuf>=4.25.3,<5
+attrs>=19.1
+absl-py>=1.0
+flatbuffers>=2.0
