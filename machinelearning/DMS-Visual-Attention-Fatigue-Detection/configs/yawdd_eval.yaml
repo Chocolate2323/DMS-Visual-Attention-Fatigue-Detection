@@ -1,5 +1,0 @@
-# YawDD Mirror 子集评估建议配置。
-# 说明：该阈值来自本次 outputs/yawdd_mirror_eval 的阈值扫描，
-# 更适合“打哈欠检测”任务，不一定适合所有真实驾驶疲劳场景。
-fatigue:
-  mar_yawn_threshold: 0.36
